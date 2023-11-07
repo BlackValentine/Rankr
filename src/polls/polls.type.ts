@@ -1,4 +1,5 @@
-import { Request } from '@nestjs/common';
+import { Request } from 'express';
+import { Socket } from 'socket.io';
 
 //Service types
 export type CreatePollFields = {
@@ -16,6 +17,17 @@ export type RejoinPollFields = {
   pollID: string;
   userID: string;
   name: string;
+}
+
+export interface AddParticipantFields {
+  pollID: string;
+  userID: string;
+  name: string;
+}
+
+export interface RemoveParticipantFields {
+  pollID: string;
+  userID: string;
 }
 
 //Repository types
@@ -40,3 +52,4 @@ type AuthPayload = {
 }
 
 export type RequestWithAuth = Request & AuthPayload;
+export type SocketWithAuth = Socket & AuthPayload;

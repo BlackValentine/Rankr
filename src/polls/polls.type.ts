@@ -19,15 +19,21 @@ export type RejoinPollFields = {
   name: string;
 }
 
-export interface AddParticipantFields {
+export type AddParticipantFields = {
   pollID: string;
   userID: string;
   name: string;
 }
 
-export interface RemoveParticipantFields {
+export type RemoveParticipantFields = {
   pollID: string;
   userID: string;
+}
+
+export type AddNominationFields = {
+  pollID: string;
+  userID: string;
+  text: string;
 }
 
 //Repository types
@@ -42,6 +48,21 @@ export type AddParticipantData = {
   pollID: string;
   userID: string;
   name: string;
+}
+
+export type Nomination = {
+  userID: string;
+  text: string;
+}
+
+export type Nominations = {
+  [nominationID: string]: Nomination;
+}
+
+export type AddNominationData = {
+  pollID: string;
+  nominationID: string;
+  nomination: Nomination;
 }
 
 //Guard types

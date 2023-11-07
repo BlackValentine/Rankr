@@ -1,14 +1,16 @@
-export interface Participants {
+import { Nominations } from "./polls.type";
+
+export type Participants = {
   [participantID: string]: string;
 }
 
-export interface Poll {
+export type Poll = {
   id: string;
   topic: string;
   votesPerVoter: number;
   participants: Participants;
   adminID: string;
-  // nominations: Nominations;
+  nominations: Nominations;
   // rankings: Rankings;
   // results: Results;
   hasStarted: boolean;

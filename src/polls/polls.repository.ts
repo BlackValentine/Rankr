@@ -4,7 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { Redis } from 'ioredis';
 import { IORedisKey } from 'src/redis.module';
 import { Poll } from './poll.interface';
-import { AddNominationData, AddParticipantData, CreatePollData } from './polls.type';
+import { AddNominationData, AddParticipantData, AddParticipantRankingsData, CreatePollData } from './polls.type';
 import { WsBadRequestException } from 'src/exceptions/ws-exceptions';
 
 @Injectable()
@@ -26,6 +26,7 @@ export class PollsRepository {
       adminID: userID,
       hasStarted: false,
       nominations: {},
+      rankings: {},
     };
 
     this.logger.log(`Creating new poll: ${JSON.stringify(initialPoll, null, 2)} with TTL ${this.ttl}`);
@@ -136,6 +137,37 @@ export class PollsRepository {
       this.logger.error(`Failed to remove nominationID: ${nominationID} from poll: ${pollID}`, e);
 
       throw new InternalServerErrorException(`Failed to remove nominationID: ${nominationID} from poll: ${pollID}`);
+    }
+  }
+
+  async startPoll(pollID: string): Promise<Poll> {
+    this.logger.log(`setting hasStarted for poll: ${pollID}`);
+
+    const key = `polls:${pollID}`;
+
+    try {
+      await this.redisClient.send_command('JSON.SET', key, '.hasStarted', JSON.stringify(true));
+
+      return this.getPoll(pollID);
+    } catch (e) {
+      this.logger.error(`Failed set hasStarted for poll: ${pollID}`, e);
+      throw new InternalServerErrorException('The was an error starting the poll');
+    }
+  }
+
+  async addParticipantRankings({ pollID, userID, rankings }: AddParticipantRankingsData): Promise<Poll> {
+    this.logger.log(`Attempting to add rankings for userID/name: ${userID} to pollID: ${pollID}`, rankings);
+
+    const key = `polls:${pollID}`;
+    const rankingsPath = `.rankings.${userID}`;
+
+    try {
+      await this.redisClient.send_command('JSON.SET', key, rankingsPath, JSON.stringify(rankings));
+
+      return this.getPoll(pollID);
+    } catch (e) {
+      this.logger.error(`Failed to add a rankings for userID/name: ${userID}/ to pollID: ${pollID}`, rankings);
+      throw new InternalServerErrorException('There was an error starting the poll');
     }
   }
 }

@@ -4,6 +4,7 @@ import { createNominationID, createPollID, createUserID } from '../ids';
 import { PollsRepository } from './polls.repository';
 import { AddNominationFields, AddParticipantFields, CreatePollFields, JoinPollFields, RejoinPollFields, SubmitRankingsFields } from './polls.type';
 import { Poll } from './poll.interface';
+import getResults from './getResults';
 
 @Injectable()
 export class PollsService {
@@ -103,12 +104,28 @@ export class PollsService {
   }
 
   async submitRankings(rankingsData: SubmitRankingsFields): Promise<Poll> {
-    const hasPollStarted = this.pollRepository.getPoll(rankingsData.pollID);
+    const hasPollStarted = (await this.pollRepository.getPoll(rankingsData.pollID)).hasStarted;
 
     if (!hasPollStarted) {
       throw new BadRequestException('Participants cannot rank until the poll has started.');
     }
 
     return this.pollRepository.addParticipantRankings(rankingsData);
+  }
+
+  async computeResults(pollID: string): Promise<Poll> {
+    const poll = await this.pollRepository.getPoll(pollID);
+
+    const results = getResults(
+      poll.rankings,
+      poll.nominations,
+      poll.votesPerVoter,
+    );
+
+    return this.pollRepository.addResults(pollID, results);
+  }
+
+  async cancelPoll(pollID: string): Promise<void> {
+    await this.pollRepository.deletePoll(pollID);
   }
 }
